@@ -17,7 +17,7 @@ export async function uploadVideoRoutes(app: FastifyInstance) {
         }
     })
 
-    app.post("/upload-video", async (request, reply) => {
+    app.post("/videos", async (request, reply) => {
         const data = await request.file()
 
         if (!data) {
@@ -40,6 +40,15 @@ export async function uploadVideoRoutes(app: FastifyInstance) {
 
         await pump(data.file, fs.createWriteStream(uploadDestination))
 
-        return reply.send()
+        const video = await prisma.video.create({
+            data: {
+                name: data.filename,
+                path: uploadDestination
+            }
+        })
+
+        return {
+            video
+        }
     })
 }
