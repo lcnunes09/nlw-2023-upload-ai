@@ -8,13 +8,24 @@ import { Slider } from './components/ui/slider'
 import { VideoInputForm } from './components/video-input.form'
 import { PromptSelect } from './components/prompt-select'
 import { useState } from 'react'
+import { useCompletion } from 'ai/react'
 
 export function App() {
   const [temperature, setTemperature] = useState(0.5)
+  const [videoId, setVideoId] = useState<string | null>(null)
 
-  function handlePromptSelected(template: string){
-    console.log(template)
-  }
+  const {
+    input,
+    setInput,
+    handleInputChange,
+  } = useCompletion({
+    api: 'http://localhost:3333/ai-completion',
+    body: {
+      videoId,
+      temperature,
+    }
+  })
+
   return (
     <div className='min-h-screen flex flex-col'>
       <div className="px-6 py-3 flex items-center justify-between border-b">
@@ -37,7 +48,9 @@ export function App() {
           <div className='grid grid-rows-2 gap-4 flex-1'>
             <Textarea 
               className='resize-none p-4 leading-relaxed'  
-              placeholder='Add prompt to AI'
+              placeholder='Add prompt to\ AI'
+              value={input}
+              onChange={handleInputChange}
             />
             <Textarea 
               className='resize-none p-4 leading-relaxed'  
@@ -51,14 +64,14 @@ export function App() {
           </p>
         </div>
         <aside className='w-80 space-y-6'>
-          <VideoInputForm />
+          <VideoInputForm onVideoUploaded={setVideoId} />
 
           <Separator />
 
           <form className='space-y-6'>
             <div className='space-y-2'>
               <Label>Prompt</Label>
-              <PromptSelect onPromptSelected={handlePromptSelected} />
+              <PromptSelect onPromptSelected={setInput} />
             </div>
 
             <div className='space-y-2'>
