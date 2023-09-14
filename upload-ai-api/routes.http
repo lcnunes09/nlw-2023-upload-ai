@@ -33,5 +33,5 @@ Content-Type: application/json
 {
     "videoId": "4706bad5-463f-4d9f-ac53-b820083f2a53",
     "temperatura": 0.5,
-    "template": "Gere uma frase criativa para continuar o video seguir: '''{transcription}'''"
+    "prompt": "Gere uma frase criativa para continuar o video seguir: '''{transcription}'''"
 }
