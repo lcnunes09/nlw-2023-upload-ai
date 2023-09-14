@@ -8,8 +8,19 @@ import { getFFmpeg } from "@/lib/ffmpeg";
 import { fetchFile } from '@ffmpeg/util'
 import { api } from "@/lib/axios";
 
+type Status = 'waiting' | 'uploading' | 'converting' | 'transcribing' | 'success'
+
+const statusMessages = {
+    uploading: 'Uploading video',
+    converting: 'Converting video to audio',
+    transcribing: 'Transcribing audio',
+    success: 'Success',
+}
+
 export function VideoInputForm() {
     const [videoFile, setVideoFile] = useState<File | null>(null)
+    const [status, setStatus] = useState<Status>('waiting')
+
     const promptInputRef = useRef<HTMLTextAreaElement>(null)
 
     function handleChosenVideo(event: ChangeEvent<HTMLInputElement>) {
@@ -52,8 +63,6 @@ export function VideoInputForm() {
         const audioFileBlob = new Blob([data], { type: 'audio/mpeg' })
         const audioFile = new File([audioFileBlob], 'audio.mp3', { type: 'audio/mpeg' })
 
-        console.log('Convert finished')
-
         return audioFile
     }
 
@@ -66,21 +75,27 @@ export function VideoInputForm() {
             return
         }
 
+        setStatus('converting')
+
         const audioFile = await convertVideoToAudio(videoFile)
 
         const data = new FormData()
 
         data.append('file', audioFile)
 
+        setStatus('uploading')
+
         const response = await api.post('/videos', data)
 
         const videoId = response.data.video.id
+
+        setStatus('transcribing')
 
         await api.post(`/videos/${videoId}/transcription`, {
             prompt,
         })
 
-        console.log('Transcription finished')
+        setStatus('success')
     }
 
     const previewURL = useMemo(() => {
@@ -115,15 +130,25 @@ export function VideoInputForm() {
               <Label htmlFor='transcription_prompt'>Prompt</Label>
               <Textarea 
                 ref={promptInputRef}
+                disabled={status !== 'waiting'}
                 id="transcription_prompt" 
                 className='h-20 leading-relaxed resize-none'
                 placeholder='Add keywords mentioned in the video - use comma (,) as a separator'
               />
             </div>
 
-            <Button type="submit" className='w-full'>
-              Upload video
-              <Upload className='w-4 h-4 ml-2' />
+            <Button 
+              data-success={status === 'success'}
+              disabled={status !== 'waiting'} 
+              type="submit" 
+              className='w-full data-[success=true]:bg-green-600'
+            >
+              {status === 'waiting' ? (
+                <>
+                  Upload video
+                  <Upload className='w-4 h-4 ml-2' />
+                </>
+              ) : statusMessages[status]}              
             </Button>
           </form>
     )
