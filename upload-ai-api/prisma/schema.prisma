@@ -18,5 +18,5 @@ model Video {
 model Prompt {
   id       String @id @default(uuid())
   title    String
-  tempalte String
+  template String
 }
